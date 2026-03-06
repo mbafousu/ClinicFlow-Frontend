@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
 import PatientDetails from "./pages/PatientDetails";
 import Visits from "./pages/Visits";
+import DrugLookup from "./pages/DrugLookup";
 
 import "./styles/App.css";
 
@@ -48,6 +49,14 @@ export default function App() {
   element={
     <ProtectedRoute>
       <Visits />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/drugs"
+  element={
+    <ProtectedRoute>
+      <DrugLookup />
     </ProtectedRoute>
   }
 />

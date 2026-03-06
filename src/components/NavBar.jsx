@@ -14,6 +14,7 @@ export default function NavBar() {
       <Link to="/">Dashboard</Link>
       <Link to="/patients">Patients</Link>
       <Link to="/visits">Visits</Link>
+      <Link to="/drugs">Drug Lookup</Link>
 
       <div className="spacer" />
 
