@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
 import PatientDetails from "./pages/PatientDetails";
+import Visits from "./pages/Visits";
 
 import "./styles/App.css";
 
@@ -42,6 +43,14 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/visits"
+  element={
+    <ProtectedRoute>
+      <Visits />
+    </ProtectedRoute>
+  }
+/>
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
