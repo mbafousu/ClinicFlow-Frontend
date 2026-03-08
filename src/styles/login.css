@@ -1,0 +1,157 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.login-page {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(rgba(7, 32, 55, 0.82), rgba(7, 32, 55, 0.82)),
+    url("https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1600&q=80");
+  background-size: cover;
+  background-position: center;
+  padding: 24px;
+}
+
+.login-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 45, 78, 0.75),
+    rgba(18, 90, 102, 0.55)
+  );
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+  padding: 32px 28px;
+  border-top: 6px solid #0f6a8b;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.brand-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0f6a8b, #1ea672);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.login-brand h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #12344d;
+}
+
+.login-brand p {
+  margin: 4px 0 0;
+  color: #5f7383;
+  font-size: 13px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-form label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2b4a5f;
+  margin-bottom: 6px;
+}
+
+.login-form input {
+  height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #c5d1da;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  outline: none;
+}
+
+.login-form input:focus {
+  border-color: #0f6a8b;
+  box-shadow: 0 0 0 3px rgba(15, 106, 139, 0.12);
+}
+
+.login-form button {
+  height: 44px;
+  border: none;
+  border-radius: 4px;
+  background: #1f9d69;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.login-form button:hover {
+  background: #178456;
+}
+
+.login-error {
+  color: #b42318;
+  font-size: 12px;
+  margin: -4px 0 12px;
+}
+
+.forgot-link {
+  margin-top: 14px;
+  font-size: 12px;
+  color: #0f6a8b;
+  text-align: center;
+  cursor: pointer;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+.login-footer {
+  margin-top: 26px;
+  padding-top: 14px;
+  border-top: 1px solid #e5eaef;
+  text-align: center;
+  font-size: 11px;
+  color: #6b7d8a;
+  line-height: 1.6;
+}
+
+@media (max-width: 520px) {
+  .login-card {
+    padding: 24px 20px;
+  }
+
+  .login-brand h1 {
+    font-size: 24px;
+  }
+}

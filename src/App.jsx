@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import NavBar from "./components/NavBar";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
 import Login from "./pages/Login";
@@ -9,14 +9,19 @@ import PatientDetails from "./pages/PatientDetails";
 import Visits from "./pages/Visits";
 import DrugLookup from "./pages/DrugLookup";
 
-import "./styles/App.css";
-
 export default function App() {
+  const location = useLocation();
+  const isLoggedIn = !!localStorage.getItem("token");
+
   return (
-    <BrowserRouter>
-      <NavBar />
+    <>
+      {isLoggedIn && location.pathname !== "/login" && <Navbar />}
+
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route
+          path="/login"
+          element={isLoggedIn ? <Navigate to="/" replace /> : <Login />}
+        />
 
         <Route
           path="/"
@@ -44,25 +49,27 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-  path="/visits"
-  element={
-    <ProtectedRoute>
-      <Visits />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/drugs"
-  element={
-    <ProtectedRoute>
-      <DrugLookup />
-    </ProtectedRoute>
-  }
-/>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="/visits"
+          element={
+            <ProtectedRoute>
+              <Visits />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/druglookup"
+          element={
+            <ProtectedRoute>
+              <DrugLookup />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
       </Routes>
-    </BrowserRouter>
+    </>
   );
 }

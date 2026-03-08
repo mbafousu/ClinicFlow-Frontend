@@ -1,73 +1,101 @@
 import { useState } from "react";
+import AppShell from "../ui/AppShell";
+import PageHeader from "../ui/PageHeader";
+import FormCard from "../ui/FormCard";
 
 export default function DrugLookup() {
-  const [term, setTerm] = useState("");
-  const [results, setResults] = useState([]);
-  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [drugs, setDrugs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const searchDrug = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    setResults([]);
+  async function handleSearch(event) {
+    event.preventDefault();
+
+    if (!searchTerm.trim()) {
+      setError("Please enter a medication name.");
+      setDrugs([]);
+      return;
+    }
 
     try {
-      const query = encodeURIComponent(`openfda.brand_name:${term}`);
-      const url = `https://api.fda.gov/drug/label.json?search=${query}&limit=5`;
+      setLoading(true);
+      setError("");
 
-      const res = await fetch(url);
-      const data = await res.json();
+      const query = encodeURIComponent(searchTerm.trim());
 
-      if (!res.ok) {
-        throw new Error(data?.error?.message || "Failed to fetch drug data");
+      const response = await fetch(
+        `https://api.fda.gov/drug/label.json?search=openfda.brand_name:${query}+openfda.generic_name:${query}&limit=6`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.results) {
+        throw new Error("No medication data found.");
       }
 
-      setResults(data.results || []);
+      setDrugs(data.results);
     } catch (err) {
-      setError(err.message);
+      setError("No medication data found for that search.");
+      setDrugs([]);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="page">
-      <h1>Drug Lookup</h1>
+    <AppShell>
+      <PageHeader title="Drug Lookup" />
 
-      <form className="card" onSubmit={searchDrug}>
-        <label>Search medication name</label>
-        <input
-          value={term}
-          onChange={(e) => setTerm(e.target.value)}
-          placeholder="Tylenol"
-        />
-        <button type="submit">Search</button>
-      </form>
+      <div className="drug-lookup-page">
+        <FormCard>
+          <h2 className="section-title">Search Medication</h2>
+          <p className="section-subtitle">
+            Search medication details using a third-party API.
+          </p>
 
-      {loading && <p>Loading...</p>}
-      {error && <p className="error">{error}</p>}
+          <form className="drug-search-form" onSubmit={handleSearch}>
+            <input
+              type="text"
+              placeholder="Enter drug name..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
 
-      <div className="grid">
-        {results.map((drug, index) => (
-          <div className="card" key={index}>
-            <h3>{drug.openfda?.brand_name?.[0] || "Unknown Brand"}</h3>
-            <p>
-              <b>Generic:</b> {drug.openfda?.generic_name?.[0] || "N/A"}
-            </p>
-            <p>
-              <b>Manufacturer:</b>{" "}
-              {drug.openfda?.manufacturer_name?.[0] || "N/A"}
-            </p>
-            <p>
-              <b>Purpose:</b> {drug.purpose?.[0] || "N/A"}
-            </p>
-            <p>
-              <b>Warnings:</b> {drug.warnings?.[0]?.slice(0, 150) || "N/A"}...
-            </p>
-          </div>
-        ))}
+            <button type="submit" className="primary-btn">
+              Search
+            </button>
+          </form>
+
+          {loading && <p className="info-text">Loading medication data...</p>}
+          {error && <p className="error-text">{error}</p>}
+        </FormCard>
+
+        <div className="drug-results-grid">
+          {drugs.map((drug, index) => {
+            const brandName = drug.openfda?.brand_name?.[0] || "N/A";
+            const genericName = drug.openfda?.generic_name?.[0] || "N/A";
+            const manufacturer = drug.openfda?.manufacturer_name?.[0] || "N/A";
+            const purpose = drug.purpose?.[0] || "Not available";
+            const warnings = drug.warnings?.[0] || "Not available";
+            const dosage =
+              drug.dosage_and_administration?.[0] || "Not available";
+
+            return (
+              <FormCard key={index}>
+                <div className="drug-card">
+                  <h3 className="drug-title">{brandName}</h3>
+                  <p><strong>Generic Name:</strong> {genericName}</p>
+                  <p><strong>Manufacturer:</strong> {manufacturer}</p>
+                  <p><strong>Purpose:</strong> {purpose}</p>
+                  <p><strong>Warnings:</strong> {warnings}</p>
+                  <p><strong>Dosage:</strong> {dosage}</p>
+                </div>
+              </FormCard>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

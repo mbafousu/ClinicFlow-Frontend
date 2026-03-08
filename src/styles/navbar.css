@@ -1,0 +1,52 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border-bottom: 1px solid #d7dee5;
+  padding: 14px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar-brand h2 {
+  margin: 0;
+  color: #b1144a;
+  font-size: 26px;
+}
+
+.navbar-brand span {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.navbar-links a {
+  text-decoration: none;
+  color: #334155;
+  font-weight: 500;
+}
+
+.navbar-links a:hover {
+  color: #b1144a;
+}
+
+.logout-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #b1144a;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  opacity: 0.9;
+}

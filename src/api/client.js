@@ -8,12 +8,20 @@ export const apiFetch = async (path, options = {}) => {
     ...(options.headers || {}),
   };
 
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers,
+  });
 
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.message || "Request failed");
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data?.message || "Request failed");
+  }
 
   return data;
 };

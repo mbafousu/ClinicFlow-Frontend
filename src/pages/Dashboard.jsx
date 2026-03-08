@@ -1,44 +1,18 @@
-import { useEffect, useState } from "react";
-import { apiFetch } from "../api/client";
+import AppShell from "../ui/AppShell";
+import PageHeader from "../ui/PageHeader";
+import StatCard from "../ui/StatCard";
 
 export default function Dashboard() {
-  const [patientsCount, setPatientsCount] = useState(0);
-  const [recentVisits, setRecentVisits] = useState([]);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const load = async () => {
-      const patients = await apiFetch("/api/patients");
-      const visits = await apiFetch("/api/visits");
-      setPatientsCount(patients.length);
-      setRecentVisits(visits.slice(0, 5));
-    };
-
-    load().catch((err) => setError(err.message));
-  }, []);
-
   return (
-    <div className="page">
-      <h1>Dashboard</h1>
-      {error && <p className="error">{error}</p>}
+    <AppShell>
+      <PageHeader title="Dashboard" />
 
-      <div className="grid">
-        <div className="card">
-          <h3>Total Patients</h3>
-          <p className="big">{patientsCount}</p>
-        </div>
-
-        <div className="card">
-          <h3>Recent Visits</h3>
-          <ul>
-            {recentVisits.map((v) => (
-              <li key={v._id}>
-                {v.patient?.firstName} {v.patient?.lastName} — <b>{v.status}</b>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <div className="stats-grid">
+        <StatCard title="Total Patients" value="124" />
+        <StatCard title="Visits Today" value="18" />
+        <StatCard title="Active Cases" value="42" />
+        <StatCard title="Drug Searches" value="67" />
       </div>
-    </div>
+    </AppShell>
   );
 }

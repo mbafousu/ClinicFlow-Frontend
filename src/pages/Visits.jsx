@@ -1,177 +1,234 @@
-import { useEffect, useState } from "react";
-import { apiFetch } from "../api/client";
+import { useMemo, useState } from "react";
+import AppShell from "../ui/AppShell";
+import PageHeader from "../ui/PageHeader";
+import SearchBar from "../ui/SearchBar";
+import DataTable from "../ui/DataTable";
+import StatusChip from "../ui/StatusChip";
+import FormCard from "../ui/FormCard";
+
+const initialVisits = [
+  {
+    id: 1,
+    patientName: "John Doe",
+    date: "2026-03-01",
+    reason: "Routine Checkup",
+    provider: "Dr. Williams",
+    status: "Completed",
+  },
+  {
+    id: 2,
+    patientName: "Jane Smith",
+    date: "2026-03-03",
+    reason: "Follow-up Visit",
+    provider: "Dr. Brown",
+    status: "Pending",
+  },
+  {
+    id: 3,
+    patientName: "Sarah Johnson",
+    date: "2026-03-05",
+    reason: "Blood Pressure Review",
+    provider: "Dr. Lee",
+    status: "Completed",
+  },
+];
 
 export default function Visits() {
-  const [visits, setVisits] = useState([]);
-  const [patients, setPatients] = useState([]);
-  const [error, setError] = useState("");
+  const [visits, setVisits] = useState(initialVisits);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [formData, setFormData] = useState({
+    patientName: "",
+    date: "",
+    reason: "",
+    provider: "",
+    status: "Pending",
+  });
 
-  const [patientId, setPatientId] = useState("");
-  const [reason, setReason] = useState("");
-  const [status, setStatus] = useState("checked_in");
+  const filteredVisits = useMemo(() => {
+    const value = searchTerm.toLowerCase();
 
-  const [filterStatus, setFilterStatus] = useState("");
-
-  // Load patients + visits
-  const load = async () => {
-    const v = await apiFetch("/api/visits");
-    const p = await apiFetch("/api/patients");
-
-    setVisits(v);
-    setPatients(p);
-  };
-
-  useEffect(() => {
-    load().catch((err) => setError(err.message));
-  }, []);
-
-  // Create visit
-  const createVisit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    try {
-      const newVisit = await apiFetch("/api/visits", {
-        method: "POST",
-        body: JSON.stringify({
-          patient: patientId,
-          reason,
-          status,
-          vitals: {
-            temperatureC: 37,
-            pulse: 80,
-            respRate: 16,
-            bpSystolic: 120,
-            bpDiastolic: 80,
-            spo2: 98,
-            weightKg: 75,
-          },
-        }),
-      });
-
-      setVisits((prev) => [newVisit, ...prev]);
-      setReason("");
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  // Update visit status
-  const updateStatus = async (id, newStatus) => {
-    try {
-      const updated = await apiFetch(`/api/visits/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      setVisits((prev) =>
-        prev.map((v) => (v._id === id ? updated : v))
+    return visits.filter((visit) => {
+      return (
+        visit.patientName.toLowerCase().includes(value) ||
+        visit.reason.toLowerCase().includes(value) ||
+        visit.provider.toLowerCase().includes(value) ||
+        visit.status.toLowerCase().includes(value) ||
+        visit.date.toLowerCase().includes(value)
       );
-    } catch (err) {
-      setError(err.message);
+    });
+  }, [visits, searchTerm]);
+
+  function handleSearchChange(event) {
+    setSearchTerm(event.target.value);
+  }
+
+  function handleFormChange(event) {
+    const { name, value } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  function handleAddVisit(event) {
+    event.preventDefault();
+
+    if (
+      !formData.patientName.trim() ||
+      !formData.date.trim() ||
+      !formData.reason.trim() ||
+      !formData.provider.trim()
+    ) {
+      alert("Please fill in all visit fields.");
+      return;
     }
-  };
 
-  // Delete visit
-  const deleteVisit = async (id) => {
-    if (!confirm("Delete this visit?")) return;
+    const newVisit = {
+      id: Date.now(),
+      patientName: formData.patientName.trim(),
+      date: formData.date,
+      reason: formData.reason.trim(),
+      provider: formData.provider.trim(),
+      status: formData.status,
+    };
 
-    try {
-      await apiFetch(`/api/visits/${id}`, { method: "DELETE" });
+    setVisits((prev) => [newVisit, ...prev]);
 
-      setVisits((prev) => prev.filter((v) => v._id !== id));
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+    setFormData({
+      patientName: "",
+      date: "",
+      reason: "",
+      provider: "",
+      status: "Pending",
+    });
+  }
 
-  const filteredVisits = filterStatus
-    ? visits.filter((v) => v.status === filterStatus)
-    : visits;
+  function handleDeleteVisit(id) {
+    const confirmed = window.confirm("Delete this visit?");
+    if (!confirmed) return;
+
+    setVisits((prev) => prev.filter((visit) => visit.id !== id));
+  }
+
+  function handleEditVisit(id) {
+    const visitToEdit = visits.find((visit) => visit.id === id);
+    if (!visitToEdit) return;
+
+    const updatedReason = prompt("Edit visit reason:", visitToEdit.reason);
+    if (!updatedReason) return;
+
+    setVisits((prev) =>
+      prev.map((visit) =>
+        visit.id === id
+          ? { ...visit, reason: updatedReason.trim() || visit.reason }
+          : visit
+      )
+    );
+  }
+
+  const columns = ["Patient", "Date", "Reason", "Provider", "Status", "Actions"];
+
+  const tableRows = filteredVisits.map((visit) => ({
+    Patient: visit.patientName,
+    Date: visit.date,
+    Reason: visit.reason,
+    Provider: visit.provider,
+    Status: <StatusChip status={visit.status} />,
+    Actions: (
+      <div className="table-actions">
+        <button
+          className="table-btn edit-btn"
+          onClick={() => handleEditVisit(visit.id)}
+        >
+          Edit
+        </button>
+        <button
+          className="table-btn delete-btn"
+          onClick={() => handleDeleteVisit(visit.id)}
+        >
+          Delete
+        </button>
+      </div>
+    ),
+  }));
 
   return (
-    <div className="page">
-      <h1>Visits</h1>
+    <AppShell>
+      <PageHeader title="Visits" />
 
-      {error && <p className="error">{error}</p>}
+      <div className="visits-page">
+        <FormCard>
+          <div className="visits-toolbar">
+            <SearchBar
+              placeholder="Search visits by patient, reason, provider, status, or date..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+          </div>
+        </FormCard>
 
-      <div className="grid2">
-        {/* Create Visit */}
-        <form className="card" onSubmit={createVisit}>
-          <h3>Create Visit</h3>
+        <FormCard>
+          <h2 className="section-title">Add New Visit</h2>
 
-          <label>Patient</label>
-          <select
-            value={patientId}
-            onChange={(e) => setPatientId(e.target.value)}
-          >
-            <option value="">Select Patient</option>
-            {patients.map((p) => (
-              <option key={p._id} value={p._id}>
-                {p.firstName} {p.lastName}
-              </option>
-            ))}
-          </select>
+          <form className="visit-form" onSubmit={handleAddVisit}>
+            <input
+              type="text"
+              name="patientName"
+              placeholder="Patient Name"
+              value={formData.patientName}
+              onChange={handleFormChange}
+            />
 
-          <label>Reason</label>
-          <input
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
+            <input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleFormChange}
+            />
 
-          <label>Status</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="checked_in">Checked In</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </select>
+            <input
+              type="text"
+              name="reason"
+              placeholder="Reason for Visit"
+              value={formData.reason}
+              onChange={handleFormChange}
+            />
 
-          <button type="submit">Create Visit</button>
-        </form>
+            <input
+              type="text"
+              name="provider"
+              placeholder="Provider Name"
+              value={formData.provider}
+              onChange={handleFormChange}
+            />
 
-        {/* Visit List */}
-        <div className="card">
-          <h3>Visit List</h3>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleFormChange}
+            >
+              <option value="Pending">Pending</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
 
-          <label>Filter by Status</label>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="">All</option>
-            <option value="checked_in">Checked In</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </select>
+            <button type="submit" className="primary-btn">
+              Add Visit
+            </button>
+          </form>
+        </FormCard>
 
-          <ul>
-            {filteredVisits.map((v) => (
-              <li key={v._id}>
-                <b>
-                  {v.patient?.firstName} {v.patient?.lastName}
-                </b>{" "}
-                — {v.reason} — <b>{v.status}</b>
+        <FormCard>
+          <div className="visits-table-header">
+            <h2 className="section-title">Visit Records</h2>
+            <p className="section-subtitle">
+              Total Results: {filteredVisits.length}
+            </p>
+          </div>
 
-                <div className="row">
-                  <button onClick={() => updateStatus(v._id, "completed")}>
-                    Complete
-                  </button>
-
-                  <button
-                    className="danger"
-                    onClick={() => deleteVisit(v._id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+          <DataTable columns={columns} data={tableRows} />
+        </FormCard>
       </div>
-    </div>
+    </AppShell>
   );
 }

@@ -1,48 +1,87 @@
 import { useState } from "react";
-import { apiFetch } from "../api/client";
 import { useNavigate } from "react-router-dom";
+import "../styles/login.css";
 
 export default function Login() {
-  const [email, setEmail] = useState("demo@clinicflow.com");
-  const [password, setPassword] = useState("Password123!");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const onSubmit = async (e) => {
+  const [formData, setFormData] = useState({
+    userId: "",
+    password: "",
+  });
+
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError("");
 
-    try {
-      const data = await apiFetch("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      });
-
-      localStorage.setItem("token", data.token);
-      navigate("/");
-    } catch (err) {
-      setError(err.message);
+    if (!formData.userId.trim() || !formData.password.trim()) {
+      setError("Please enter your User ID and Password.");
+      return;
     }
+
+    localStorage.setItem("token", "clinicflow-demo-token");
+    localStorage.setItem(
+      "user",
+      JSON.stringify({ userId: formData.userId })
+    );
+
+    navigate("/");
   };
 
   return (
-    <div className="page">
-      <h1>ClinicFlow Login</h1>
+    <div className="login-page">
+      <div className="login-bg-overlay"></div>
 
-      <form className="card" onSubmit={onSubmit}>
-        <label>Email</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} />
+      <div className="login-card">
+        <div className="login-brand">
+          <div className="brand-mark">CF</div>
+          <div>
+            <h1>ClinicFlow</h1>
+            <p>Clinical Access Portal</p>
+          </div>
+        </div>
 
-        <label>Password</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <form className="login-form" onSubmit={handleSubmit}>
+          <label htmlFor="userId">User ID</label>
+          <input
+            id="userId"
+            type="text"
+            name="userId"
+            value={formData.userId}
+            onChange={handleChange}
+            placeholder="Enter your user ID"
+          />
 
-        {error && <p className="error">{error}</p>}
-        <button type="submit">Login</button>
-      </form>
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Enter your password"
+          />
+
+          {error && <p className="login-error">{error}</p>}
+
+          <button type="submit">Login</button>
+        </form>
+
+        <p className="forgot-link">Forgot your password?</p>
+
+        <div className="login-footer">
+          <p>Training Environment</p>
+          <p>© 2026 ClinicFlow Healthcare Systems</p>
+        </div>
+      </div>
     </div>
   );
 }
