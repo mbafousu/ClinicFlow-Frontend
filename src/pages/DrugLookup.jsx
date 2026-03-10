@@ -22,12 +22,12 @@ export default function DrugLookup() {
       setLoading(true);
       setError("");
 
-      const query = encodeURIComponent(searchTerm.trim());
+     const query = encodeURIComponent(searchTerm.trim());
 
-      const response = await fetch(
-        `https://api.fda.gov/drug/label.json?search=openfda.brand_name:${query}+openfda.generic_name:${query}&limit=6`
-      );
 
+     const response = await fetch(
+       `http://localhost:3001/api/drugs?search=${query}`
+     );
       const data = await response.json();
 
       if (!response.ok || !data.results) {

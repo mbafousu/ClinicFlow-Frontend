@@ -1,16 +1,67 @@
-# React + Vite
+#  CliniFlow Frontend
+## Overview
+This repository contains the `React frontend` for the ClinicFlow healthcare management system.
+The frontend provides the user interface for managing patients, tracking visits, and searching medication information using the FDA Drug API.
+The application communicates with the `ClinicFlow Backend REST API.`
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Backend Repository:
+https://github.com/mbafousu/CinicFlow-Backend.git
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+- User authentication
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Patient management interface
 
-## Expanding the ESLint configuration
+- Visit tracking system
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Drug lookup using FDA Drug API
+
+- Responsive UI built with Material UI
+
+## Tech Stack
+- React
+
+- React Router
+
+- Material UI (MUI)
+
+- Vite
+
+- Fetch API
+
+## Dependencies
+
+### Install dependencies
+npm install
+
+### Main libraries used:
+- npm install @mui/material @emotion/react @emotion/styled
+- npm install @mui/icons-material 
+- npm install react-router-dom 
+- npm install tsparticles tsparticles-slim
+
+## Installation
+### clone repositories: git clone https://github.com/YOUR_USERNAME/ClinicFlow-Frontend.git
+### cd clinicflow
+### run the development server: npm run dev
+
+## Future Improvements
+- Role-based authentication
+
+- Medication autocomplete search
+
+- Patient analytics dashboard
+
+- Cloud deployment 
+
+## Aplication Architecture
+React Frontend 
+↓ 
+Express Backend API 
+↓ 
+MongoDB Database 
+↓ 
+FDA Drug API
+
