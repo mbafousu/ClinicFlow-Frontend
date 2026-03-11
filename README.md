@@ -58,10 +58,10 @@ npm install
 
 ## Aplication Architecture
 React Frontend 
-↓ 
+      ↓
 Express Backend API 
-↓ 
+      ↓ 
 MongoDB Database 
-↓ 
+      ↓ 
 FDA Drug API
 

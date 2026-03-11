@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { apiFetch } from "../api/client";
 import AppShell from "../ui/AppShell";
 import PageHeader from "../ui/PageHeader";
 import SearchBar from "../ui/SearchBar";
@@ -7,53 +8,50 @@ import DataTable from "../ui/DataTable";
 import StatusChip from "../ui/StatusChip";
 import FormCard from "../ui/FormCard";
 
-const initialPatients = [
-  {
-    id: 1,
-    name: "John Doe",
-    age: 35,
-    gender: "Male",
-    phone: "555-1234",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    age: 29,
-    gender: "Female",
-    phone: "555-5678",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    name: "Michael Brown",
-    age: 41,
-    gender: "Male",
-    phone: "555-9012",
-    status: "Discharged",
-  },
-];
-
 export default function Patients() {
-  const [patients, setPatients] = useState(initialPatients);
+  const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
-    name: "",
-    age: "",
-    gender: "",
+    firstName: "",
+    lastName: "",
+    email: "",
     phone: "",
-    status: "Active",
   });
 
+  useEffect(() => {
+    async function loadPatients() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const data = await apiFetch("/api/patients");
+        setPatients(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Load patients error:", err);
+        setError(err.message || "Unable to load patients.");
+        setPatients([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadPatients();
+  }, []);
+
   const filteredPatients = useMemo(() => {
-    const value = searchTerm.toLowerCase();
+    const value = searchTerm.toLowerCase().trim();
 
     return patients.filter((patient) => {
+      const fullName =
+        `${patient.firstName || ""} ${patient.lastName || ""}`.trim();
+
       return (
-        patient.name.toLowerCase().includes(value) ||
-        patient.gender.toLowerCase().includes(value) ||
-        patient.phone.toLowerCase().includes(value) ||
-        patient.status.toLowerCase().includes(value)
+        fullName.toLowerCase().includes(value) ||
+        (patient.email || "").toLowerCase().includes(value) ||
+        (patient.phone || "").toLowerCase().includes(value)
       );
     });
   }, [patients, searchTerm]);
@@ -70,86 +68,118 @@ export default function Patients() {
     }));
   }
 
-  function handleAddPatient(event) {
+  async function handleAddPatient(event) {
     event.preventDefault();
 
     if (
-      !formData.name.trim() ||
-      !formData.age.trim() ||
-      !formData.gender.trim() ||
+      !formData.firstName.trim() ||
+      !formData.lastName.trim() ||
+      !formData.email.trim() ||
       !formData.phone.trim()
     ) {
       alert("Please fill in all patient fields.");
       return;
     }
 
-    const newPatient = {
-      id: Date.now(),
-      name: formData.name.trim(),
-      age: formData.age.trim(),
-      gender: formData.gender.trim(),
-      phone: formData.phone.trim(),
-      status: formData.status,
-    };
+    try {
+      const newPatient = await apiFetch("/api/patients", {
+        method: "POST",
+        body: JSON.stringify({
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+        }),
+      });
 
-    setPatients((prev) => [newPatient, ...prev]);
+      setPatients((prev) => [newPatient, ...prev]);
 
-    setFormData({
-      name: "",
-      age: "",
-      gender: "",
-      phone: "",
-      status: "Active",
-    });
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+      });
+    } catch (err) {
+      console.error("Add patient error:", err);
+      alert(err.message || "Unable to add patient.");
+    }
   }
 
-  function handleDeletePatient(id) {
+  async function handleDeletePatient(id) {
     const confirmed = window.confirm("Delete this patient?");
     if (!confirmed) return;
 
-    setPatients((prev) => prev.filter((patient) => patient.id !== id));
+    try {
+      await apiFetch(`/api/patients/${id}`, {
+        method: "DELETE",
+      });
+
+      setPatients((prev) => prev.filter((patient) => patient._id !== id));
+    } catch (err) {
+      console.error("Delete patient error:", err);
+      alert(err.message || "Unable to delete patient.");
+    }
   }
 
-  function handleEditPatient(id) {
-    const patientToEdit = patients.find((patient) => patient.id === id);
+  async function handleEditPatient(id) {
+    const patientToEdit = patients.find((patient) => patient._id === id);
     if (!patientToEdit) return;
 
-    const updatedName = prompt("Edit patient name:", patientToEdit.name);
-    if (!updatedName) return;
+    const currentFullName =
+      `${patientToEdit.firstName || ""} ${patientToEdit.lastName || ""}`.trim();
 
-    setPatients((prev) =>
-      prev.map((patient) =>
-        patient.id === id
-          ? { ...patient, name: updatedName.trim() || patient.name }
-          : patient
-      )
-    );
+    const updatedName = prompt("Edit patient full name:", currentFullName);
+    if (!updatedName || !updatedName.trim()) return;
+
+    const nameParts = updatedName.trim().split(" ");
+    const firstName = nameParts[0] || patientToEdit.firstName;
+    const lastName = nameParts.slice(1).join(" ") || patientToEdit.lastName;
+
+    try {
+      const updatedPatient = await apiFetch(`/api/patients/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email: patientToEdit.email,
+          phone: patientToEdit.phone,
+        }),
+      });
+
+      setPatients((prev) =>
+        prev.map((patient) => (patient._id === id ? updatedPatient : patient))
+      );
+    } catch (err) {
+      console.error("Edit patient error:", err);
+      alert(err.message || "Unable to update patient.");
+    }
   }
 
-  const columns = ["Name", "Age", "Gender", "Phone", "Status", "Actions"];
+  const columns = ["Name", "Email", "Phone", "Actions"];
 
   const tableRows = filteredPatients.map((patient) => ({
-    Name: patient.name,
-    Age: patient.age,
-    Gender: patient.gender,
-    Phone: patient.phone,
-    Status: <StatusChip status={patient.status} />,
+    Name: `${patient.firstName || ""} ${patient.lastName || ""}`.trim(),
+    Email: patient.email || "N/A",
+    Phone: patient.phone || "N/A",
     Actions: (
       <div className="table-actions">
-        <Link to={`/patients/${patient.id}`} className="table-btn view-btn">
+        <Link to={`/patients/${patient._id}`} className="table-btn view-btn">
           View Details
         </Link>
 
         <button
+          type="button"
           className="table-btn edit-btn"
-          onClick={() => handleEditPatient(patient.id)}
+          onClick={() => handleEditPatient(patient._id)}
         >
           Edit
         </button>
 
         <button
+          type="button"
           className="table-btn delete-btn"
-          onClick={() => handleDeletePatient(patient.id)}
+          onClick={() => handleDeletePatient(patient._id)}
         >
           Delete
         </button>
@@ -165,7 +195,7 @@ export default function Patients() {
         <FormCard>
           <div className="patients-toolbar">
             <SearchBar
-              placeholder="Search patients by name, gender, phone, or status..."
+              placeholder="Search patients by name, email, or phone..."
               value={searchTerm}
               onChange={handleSearchChange}
             />
@@ -178,29 +208,27 @@ export default function Patients() {
           <form className="patient-form" onSubmit={handleAddPatient}>
             <input
               type="text"
-              name="name"
-              placeholder="Full Name"
-              value={formData.name}
+              name="firstName"
+              placeholder="First Name"
+              value={formData.firstName}
               onChange={handleFormChange}
             />
 
             <input
-              type="number"
-              name="age"
-              placeholder="Age"
-              value={formData.age}
+              type="text"
+              name="lastName"
+              placeholder="Last Name"
+              value={formData.lastName}
               onChange={handleFormChange}
             />
 
-            <select
-              name="gender"
-              value={formData.gender}
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={formData.email}
               onChange={handleFormChange}
-            >
-              <option value="">Select Gender</option>
-              <option value="Female">Female</option>
-              <option value="Male">Male</option>
-            </select>
+            />
 
             <input
               type="text"
@@ -209,16 +237,6 @@ export default function Patients() {
               value={formData.phone}
               onChange={handleFormChange}
             />
-
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleFormChange}
-            >
-              <option value="Active">Active</option>
-              <option value="Pending">Pending</option>
-              <option value="Discharged">Discharged</option>
-            </select>
 
             <button type="submit" className="primary-btn">
               Add Patient
@@ -234,7 +252,15 @@ export default function Patients() {
             </p>
           </div>
 
-          <DataTable columns={columns} data={tableRows} />
+          {loading ? (
+            <p className="info-text">Loading patients...</p>
+          ) : error ? (
+            <p className="error-text">{error}</p>
+          ) : filteredPatients.length > 0 ? (
+            <DataTable columns={columns} data={tableRows} />
+          ) : (
+            <p className="info-text">No patients found.</p>
+          )}
         </FormCard>
       </div>
     </AppShell>

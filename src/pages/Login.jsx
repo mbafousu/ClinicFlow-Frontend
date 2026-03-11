@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../api/client";
 import "../styles/login.css";
 
 export default function Login() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    userId: "",
+    email: "",
     password: "",
   });
 
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -19,21 +21,36 @@ export default function Login() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.userId.trim() || !formData.password.trim()) {
-      setError("Please enter your User ID and Password.");
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError("Please enter your email and password.");
       return;
     }
 
-    localStorage.setItem("token", "clinicflow-demo-token");
-    localStorage.setItem(
-      "user",
-      JSON.stringify({ userId: formData.userId })
-    );
+    try {
+      setLoading(true);
+      setError("");
 
-    navigate("/");
+      const data = await apiFetch("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      navigate("/");
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.message || "Login failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,19 +67,17 @@ export default function Login() {
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
-          <label htmlFor="userId">User ID</label>
+          <label>Email</label>
           <input
-            id="userId"
-            type="text"
-            name="userId"
-            value={formData.userId}
+            type="email"
+            name="email"
+            value={formData.email}
             onChange={handleChange}
-            placeholder="Enter your user ID"
+            placeholder="Enter your email"
           />
 
-          <label htmlFor="password">Password</label>
+          <label>Password</label>
           <input
-            id="password"
             type="password"
             name="password"
             value={formData.password}
@@ -72,7 +87,9 @@ export default function Login() {
 
           {error && <p className="login-error">{error}</p>}
 
-          <button type="submit">Login</button>
+          <button type="submit" disabled={loading}>
+            {loading ? "Signing in..." : "Login"}
+          </button>
         </form>
 
         <p className="forgot-link">Forgot your password?</p>

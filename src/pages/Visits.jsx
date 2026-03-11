@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { apiFetch } from "../api/client";
 import AppShell from "../ui/AppShell";
 import PageHeader from "../ui/PageHeader";
 import SearchBar from "../ui/SearchBar";
@@ -6,54 +7,63 @@ import DataTable from "../ui/DataTable";
 import StatusChip from "../ui/StatusChip";
 import FormCard from "../ui/FormCard";
 
-const initialVisits = [
-  {
-    id: 1,
-    patientName: "John Doe",
-    date: "2026-03-01",
-    reason: "Routine Checkup",
-    provider: "Dr. Williams",
-    status: "Completed",
-  },
-  {
-    id: 2,
-    patientName: "Jane Smith",
-    date: "2026-03-03",
-    reason: "Follow-up Visit",
-    provider: "Dr. Brown",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    patientName: "Sarah Johnson",
-    date: "2026-03-05",
-    reason: "Blood Pressure Review",
-    provider: "Dr. Lee",
-    status: "Completed",
-  },
-];
-
 export default function Visits() {
-  const [visits, setVisits] = useState(initialVisits);
+  const [visits, setVisits] = useState([]);
+  const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
-    patientName: "",
-    date: "",
+    patient: "",
+    visitDate: "",
     reason: "",
-    provider: "",
-    status: "Pending",
+    status: "scheduled",
   });
 
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const [visitsData, patientsData] = await Promise.all([
+          apiFetch("/api/visits"),
+          apiFetch("/api/patients"),
+        ]);
+
+        setVisits(Array.isArray(visitsData) ? visitsData : []);
+        setPatients(Array.isArray(patientsData) ? patientsData : []);
+      } catch (err) {
+        console.error("Load visits error:", err);
+        setError(err.message || "Unable to load visits.");
+        setVisits([]);
+        setPatients([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, []);
+
   const filteredVisits = useMemo(() => {
-    const value = searchTerm.toLowerCase();
+    const value = searchTerm.toLowerCase().trim();
 
     return visits.filter((visit) => {
+      const patientName = visit.patient
+        ? `${visit.patient.firstName || ""} ${visit.patient.lastName || ""}`.trim()
+        : "";
+
+      const visitDate = visit.visitDate
+        ? new Date(visit.visitDate).toLocaleDateString()
+        : "";
+
       return (
-        visit.patientName.toLowerCase().includes(value) ||
-        visit.reason.toLowerCase().includes(value) ||
-        visit.provider.toLowerCase().includes(value) ||
-        visit.status.toLowerCase().includes(value) ||
-        visit.date.toLowerCase().includes(value)
+        patientName.toLowerCase().includes(value) ||
+        (visit.reason || "").toLowerCase().includes(value) ||
+        (visit.status || "").toLowerCase().includes(value) ||
+        visitDate.toLowerCase().includes(value)
       );
     });
   }, [visits, searchTerm]);
@@ -70,87 +80,123 @@ export default function Visits() {
     }));
   }
 
-  function handleAddVisit(event) {
+  async function handleAddVisit(event) {
     event.preventDefault();
 
     if (
-      !formData.patientName.trim() ||
-      !formData.date.trim() ||
-      !formData.reason.trim() ||
-      !formData.provider.trim()
+      !formData.patient ||
+      !formData.visitDate ||
+      !formData.reason.trim()
     ) {
       alert("Please fill in all visit fields.");
       return;
     }
 
-    const newVisit = {
-      id: Date.now(),
-      patientName: formData.patientName.trim(),
-      date: formData.date,
-      reason: formData.reason.trim(),
-      provider: formData.provider.trim(),
-      status: formData.status,
-    };
+    try {
+      const createdVisit = await apiFetch("/api/visits", {
+        method: "POST",
+        body: JSON.stringify({
+          patient: formData.patient,
+          visitDate: formData.visitDate,
+          reason: formData.reason.trim(),
+          status: formData.status,
+        }),
+      });
 
-    setVisits((prev) => [newVisit, ...prev]);
+      const refreshedVisits = await apiFetch("/api/visits");
+      setVisits(Array.isArray(refreshedVisits) ? refreshedVisits : []);
 
-    setFormData({
-      patientName: "",
-      date: "",
-      reason: "",
-      provider: "",
-      status: "Pending",
-    });
+      setFormData({
+        patient: "",
+        visitDate: "",
+        reason: "",
+        status: "scheduled",
+      });
+    } catch (err) {
+      console.error("Add visit error:", err);
+      alert(err.message || "Unable to add visit.");
+    }
   }
 
-  function handleDeleteVisit(id) {
+  async function handleDeleteVisit(id) {
     const confirmed = window.confirm("Delete this visit?");
     if (!confirmed) return;
 
-    setVisits((prev) => prev.filter((visit) => visit.id !== id));
+    try {
+      await apiFetch(`/api/visits/${id}`, {
+        method: "DELETE",
+      });
+
+      setVisits((prev) => prev.filter((visit) => visit._id !== id));
+    } catch (err) {
+      console.error("Delete visit error:", err);
+      alert(err.message || "Unable to delete visit.");
+    }
   }
 
-  function handleEditVisit(id) {
-    const visitToEdit = visits.find((visit) => visit.id === id);
+  async function handleEditVisit(id) {
+    const visitToEdit = visits.find((visit) => visit._id === id);
     if (!visitToEdit) return;
 
-    const updatedReason = prompt("Edit visit reason:", visitToEdit.reason);
-    if (!updatedReason) return;
+    const updatedReason = prompt("Edit visit reason:", visitToEdit.reason || "");
+    if (!updatedReason || !updatedReason.trim()) return;
 
-    setVisits((prev) =>
-      prev.map((visit) =>
-        visit.id === id
-          ? { ...visit, reason: updatedReason.trim() || visit.reason }
-          : visit
-      )
-    );
+    try {
+      const updatedVisit = await apiFetch(`/api/visits/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          patient: visitToEdit.patient?._id || visitToEdit.patient,
+          visitDate: visitToEdit.visitDate,
+          reason: updatedReason.trim(),
+          status: visitToEdit.status,
+          vitals: visitToEdit.vitals || {},
+          notes: visitToEdit.notes || "",
+        }),
+      });
+
+      const refreshedVisits = await apiFetch("/api/visits");
+      setVisits(Array.isArray(refreshedVisits) ? refreshedVisits : []);
+    } catch (err) {
+      console.error("Edit visit error:", err);
+      alert(err.message || "Unable to update visit.");
+    }
   }
 
-  const columns = ["Patient", "Date", "Reason", "Provider", "Status", "Actions"];
+  const columns = ["Patient", "Date", "Reason", "Status", "Actions"];
 
-  const tableRows = filteredVisits.map((visit) => ({
-    Patient: visit.patientName,
-    Date: visit.date,
-    Reason: visit.reason,
-    Provider: visit.provider,
-    Status: <StatusChip status={visit.status} />,
-    Actions: (
-      <div className="table-actions">
-        <button
-          className="table-btn edit-btn"
-          onClick={() => handleEditVisit(visit.id)}
-        >
-          Edit
-        </button>
-        <button
-          className="table-btn delete-btn"
-          onClick={() => handleDeleteVisit(visit.id)}
-        >
-          Delete
-        </button>
-      </div>
-    ),
-  }));
+  const tableRows = filteredVisits.map((visit) => {
+    const patientName = visit.patient
+      ? `${visit.patient.firstName || ""} ${visit.patient.lastName || ""}`.trim()
+      : "Unknown Patient";
+
+    return {
+      Patient: patientName,
+      Date: visit.visitDate
+        ? new Date(visit.visitDate).toLocaleDateString()
+        : "N/A",
+      Reason: visit.reason || "N/A",
+      Status: <StatusChip status={visit.status || "scheduled"} />,
+      Actions: (
+        <div className="table-actions">
+          <button
+            type="button"
+            className="table-btn edit-btn"
+            onClick={() => handleEditVisit(visit._id)}
+          >
+            Edit
+          </button>
+
+          <button
+            type="button"
+            className="table-btn delete-btn"
+            onClick={() => handleDeleteVisit(visit._id)}
+          >
+            Delete
+          </button>
+        </div>
+      ),
+    };
+  });
 
   return (
     <AppShell>
@@ -160,7 +206,7 @@ export default function Visits() {
         <FormCard>
           <div className="visits-toolbar">
             <SearchBar
-              placeholder="Search visits by patient, reason, provider, status, or date..."
+              placeholder="Search visits by patient, reason, status, or date..."
               value={searchTerm}
               onChange={handleSearchChange}
             />
@@ -171,18 +217,23 @@ export default function Visits() {
           <h2 className="section-title">Add New Visit</h2>
 
           <form className="visit-form" onSubmit={handleAddVisit}>
-            <input
-              type="text"
-              name="patientName"
-              placeholder="Patient Name"
-              value={formData.patientName}
+            <select
+              name="patient"
+              value={formData.patient}
               onChange={handleFormChange}
-            />
+            >
+              <option value="">Select Patient</option>
+              {patients.map((patient) => (
+                <option key={patient._id} value={patient._id}>
+                  {`${patient.firstName || ""} ${patient.lastName || ""}`.trim()}
+                </option>
+              ))}
+            </select>
 
             <input
               type="date"
-              name="date"
-              value={formData.date}
+              name="visitDate"
+              value={formData.visitDate}
               onChange={handleFormChange}
             />
 
@@ -194,22 +245,15 @@ export default function Visits() {
               onChange={handleFormChange}
             />
 
-            <input
-              type="text"
-              name="provider"
-              placeholder="Provider Name"
-              value={formData.provider}
-              onChange={handleFormChange}
-            />
-
             <select
               name="status"
               value={formData.status}
               onChange={handleFormChange}
             >
-              <option value="Pending">Pending</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="checked_in">Checked In</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
             </select>
 
             <button type="submit" className="primary-btn">
@@ -226,7 +270,15 @@ export default function Visits() {
             </p>
           </div>
 
-          <DataTable columns={columns} data={tableRows} />
+          {loading ? (
+            <p className="info-text">Loading visits...</p>
+          ) : error ? (
+            <p className="error-text">{error}</p>
+          ) : filteredVisits.length > 0 ? (
+            <DataTable columns={columns} data={tableRows} />
+          ) : (
+            <p className="info-text">No visits found.</p>
+          )}
         </FormCard>
       </div>
     </AppShell>

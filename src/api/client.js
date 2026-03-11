@@ -1,6 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
-export const apiFetch = async (path, options = {}) => {
+export async function apiFetch(path, options = {}) {
   const token = localStorage.getItem("token");
 
   const headers = {
@@ -17,11 +17,11 @@ export const apiFetch = async (path, options = {}) => {
     headers,
   });
 
-  const data = await response.json().catch(() => ({}));
+  const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data?.message || "Request failed");
+    throw new Error(data.message || "Request failed.");
   }
 
   return data;
-};
+}
