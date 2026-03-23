@@ -1,0 +1,36 @@
+.status-scheduled {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-confirmed {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-checkedin {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-completed {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.status-cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.notes-field {
+  grid-column: span 2;
+  resize: vertical;
+  min-height: 100px;
+}
+
+@media (max-width: 768px) {
+  .notes-field {
+    grid-column: span 1;
+  }
+}

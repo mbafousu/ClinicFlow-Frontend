@@ -1,10 +1,13 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
+import Appointments from "./pages/Appointments";
 import PatientDetails from "./pages/PatientDetails";
 import Visits from "./pages/Visits";
 import DrugLookup from "./pages/DrugLookup";
@@ -40,6 +43,14 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/appointments"
+  element={
+    <ProtectedRoute>
+      <Appointments />
+    </ProtectedRoute>
+  }
+/>
 
         <Route
           path="/patients/:id"
@@ -67,9 +78,10 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
         <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
       </Routes>
+
+      <ToastContainer />
     </>
   );
 }
