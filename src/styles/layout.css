@@ -1,0 +1,52 @@
+.appointments-card {
+  overflow-x: auto;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.appointments-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.appointments-table th,
+.appointments-table td {
+  text-align: left;
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.appointments-table th {
+  color: #475569;
+  font-size: 14px;
+  font-weight: 700;
+  background: #f8fafc;
+}
+
+.appointments-table td {
+  color: #0f172a;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-badge.scheduled {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-badge.confirmed {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #b45309;
+}

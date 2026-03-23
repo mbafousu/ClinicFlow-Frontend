@@ -13,6 +13,7 @@ import Appointments from "./pages/Appointments";
 import PatientDetails from "./pages/PatientDetails";
 import Visits from "./pages/Visits";
 import DrugLookup from "./pages/DrugLookup";
+import "./styles/layout.css";
 
 export default function App() {
   const location = useLocation();
