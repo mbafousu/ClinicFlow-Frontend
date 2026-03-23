@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { apiFetch } from "../api/client";
-import AppShell from "../ui/AppShell";
-import PageHeader from "../ui/PageHeader";
 import FormCard from "../ui/FormCard";
 import DataTable from "../ui/DataTable";
 import StatusChip from "../ui/StatusChip";
@@ -46,19 +44,31 @@ export default function PatientDetails() {
 
   if (loading) {
     return (
-      <AppShell>
-        <PageHeader title="Patient Details" />
-        <p className="info-text">Loading patient...</p>
-      </AppShell>
+      <div className="page-section">
+        <div className="page-header-block">
+          <h1 className="page-title">Patient Details</h1>
+          <p className="page-subtitle">Loading patient information</p>
+        </div>
+
+        <FormCard>
+          <p className="info-text">Loading patient...</p>
+        </FormCard>
+      </div>
     );
   }
 
   if (error || !patient) {
     return (
-      <AppShell>
-        <PageHeader title="Patient Details" />
-        <p className="error-text">{error || "Patient not found."}</p>
-      </AppShell>
+      <div className="page-section">
+        <div className="page-header-block">
+          <h1 className="page-title">Patient Details</h1>
+          <p className="page-subtitle">Unable to display this patient record</p>
+        </div>
+
+        <FormCard>
+          <p className="error-text">{error || "Patient not found."}</p>
+        </FormCard>
+      </div>
     );
   }
 
@@ -80,96 +90,107 @@ export default function PatientDetails() {
   }));
 
   return (
-    <AppShell>
-      <PageHeader title="Patient Details" />
+    <div className="page-section">
+      <div className="page-header-block">
+        <h1 className="page-title">Patient Details</h1>
+        <p className="page-subtitle">
+          Review patient profile, vitals, and visit history
+        </p>
+      </div>
 
-      <div className="patient-details-page">
-        <div className="patient-details-grid">
-          <FormCard>
-            <h2>{patientName}</h2>
-            <p>
-              <strong>Email:</strong> {patient.email || "N/A"}
-            </p>
-            <p>
-              <strong>Phone:</strong> {patient.phone || "N/A"}
-            </p>
-          </FormCard>
-        </div>
-
+      <div className="patient-summary-grid">
         <FormCard>
-          <h2 className="section-title">Vitals Summary</h2>
-
-          {latestVisit ? (
-            <div className="vitals-grid">
-              <div className="vital-box">
-                <span className="vital-label">Temperature</span>
-                <span className="vital-value">
-                  {vitals.temperatureC ? `${vitals.temperatureC} °C` : "N/A"}
-                </span>
-              </div>
-
-              <div className="vital-box">
-                <span className="vital-label">Pulse</span>
-                <span className="vital-value">
-                  {vitals.pulse ? `${vitals.pulse} bpm` : "N/A"}
-                </span>
-              </div>
-
-              <div className="vital-box">
-                <span className="vital-label">Respiratory Rate</span>
-                <span className="vital-value">
-                  {vitals.respRate ? `${vitals.respRate} breaths/min` : "N/A"}
-                </span>
-              </div>
-
-              <div className="vital-box">
-                <span className="vital-label">Blood Pressure</span>
-                <span className="vital-value">
-                  {vitals.bpSystolic && vitals.bpDiastolic
-                    ? `${vitals.bpSystolic}/${vitals.bpDiastolic} mmHg`
-                    : "N/A"}
-                </span>
-              </div>
-
-              <div className="vital-box">
-                <span className="vital-label">Oxygen Saturation</span>
-                <span className="vital-value">
-                  {vitals.spo2 ? `${vitals.spo2}%` : "N/A"}
-                </span>
-              </div>
-
-              <div className="vital-box">
-                <span className="vital-label">Weight</span>
-                <span className="vital-value">
-                  {vitals.weightKg ? `${vitals.weightKg} kg` : "N/A"}
-                </span>
-              </div>
+          <div className="patient-profile-card">
+            <div className="patient-avatar large">
+              {(patient.firstName?.[0] || "P").toUpperCase()}
             </div>
-          ) : (
-            <p className="info-text">No vitals recorded.</p>
-          )}
-        </FormCard>
 
-        <FormCard>
-          <h2 className="section-title">Clinical Notes</h2>
-
-          {latestVisit?.notes ? (
-            <p>{latestVisit.notes}</p>
-          ) : (
-            <p className="info-text">No notes available.</p>
-          )}
-        </FormCard>
-
-        <FormCard>
-          <h2 className="section-title">Visit History</h2>
-
-          {visitData.length > 0 ? (
-            <DataTable columns={visitColumns} data={visitData} />
-          ) : (
-            <p className="info-text">No visit history.</p>
-          )}
+            <div className="patient-profile-info">
+              <h2 className="section-title">{patientName}</h2>
+              <p>
+                <strong>Email:</strong> {patient.email || "N/A"}
+              </p>
+              <p>
+                <strong>Phone:</strong> {patient.phone || "N/A"}
+              </p>
+            </div>
+          </div>
         </FormCard>
       </div>
-    </AppShell>
+
+      <FormCard>
+        <h2 className="section-title">Vitals Summary</h2>
+
+        {latestVisit ? (
+          <div className="vitals-grid">
+            <div className="vital-box">
+              <span className="vital-label">Temperature</span>
+              <span className="vital-value">
+                {vitals.temperatureC ? `${vitals.temperatureC} °C` : "N/A"}
+              </span>
+            </div>
+
+            <div className="vital-box">
+              <span className="vital-label">Pulse</span>
+              <span className="vital-value">
+                {vitals.pulse ? `${vitals.pulse} bpm` : "N/A"}
+              </span>
+            </div>
+
+            <div className="vital-box">
+              <span className="vital-label">Respiratory Rate</span>
+              <span className="vital-value">
+                {vitals.respRate ? `${vitals.respRate} breaths/min` : "N/A"}
+              </span>
+            </div>
+
+            <div className="vital-box">
+              <span className="vital-label">Blood Pressure</span>
+              <span className="vital-value">
+                {vitals.bpSystolic && vitals.bpDiastolic
+                  ? `${vitals.bpSystolic}/${vitals.bpDiastolic} mmHg`
+                  : "N/A"}
+              </span>
+            </div>
+
+            <div className="vital-box">
+              <span className="vital-label">Oxygen Saturation</span>
+              <span className="vital-value">
+                {vitals.spo2 ? `${vitals.spo2}%` : "N/A"}
+              </span>
+            </div>
+
+            <div className="vital-box">
+              <span className="vital-label">Weight</span>
+              <span className="vital-value">
+                {vitals.weightKg ? `${vitals.weightKg} kg` : "N/A"}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <p className="info-text">No vitals recorded.</p>
+        )}
+      </FormCard>
+
+      <FormCard>
+        <h2 className="section-title">Clinical Notes</h2>
+
+        {latestVisit?.notes ? (
+          <p>{latestVisit.notes}</p>
+        ) : (
+          <p className="info-text">No notes available.</p>
+        )}
+      </FormCard>
+
+      <FormCard>
+        <h2 className="section-title">Visit History</h2>
+
+        {visitData.length > 0 ? (
+          <DataTable columns={visitColumns} data={visitData} />
+        ) : (
+          <p className="info-text">No visit history.</p>
+        )}
+      </FormCard>
+    </div>
   );
 }

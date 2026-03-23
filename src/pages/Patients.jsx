@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../api/client";
-import AppShell from "../ui/AppShell";
-import PageHeader from "../ui/PageHeader";
 import SearchBar from "../ui/SearchBar";
 import DataTable from "../ui/DataTable";
-import StatusChip from "../ui/StatusChip";
 import FormCard from "../ui/FormCard";
+import EditModal from "../ui/EditModal";
 
 export default function Patients() {
   const [patients, setPatients] = useState([]);
@@ -21,166 +19,97 @@ export default function Patients() {
     phone: "",
   });
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingPatientId, setEditingPatientId] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
+
   useEffect(() => {
     async function loadPatients() {
       try {
-        setLoading(true);
-        setError("");
-
         const data = await apiFetch("/api/patients");
         setPatients(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Load patients error:", err);
-        setError(err.message || "Unable to load patients.");
-        setPatients([]);
+        setError("Failed to load patients");
       } finally {
         setLoading(false);
       }
     }
-
     loadPatients();
   }, []);
 
   const filteredPatients = useMemo(() => {
-    const value = searchTerm.toLowerCase().trim();
-
-    return patients.filter((patient) => {
-      const fullName =
-        `${patient.firstName || ""} ${patient.lastName || ""}`.trim();
-
-      return (
-        fullName.toLowerCase().includes(value) ||
-        (patient.email || "").toLowerCase().includes(value) ||
-        (patient.phone || "").toLowerCase().includes(value)
-      );
-    });
+    const value = searchTerm.toLowerCase();
+    return patients.filter((p) =>
+      `${p.firstName} ${p.lastName}`.toLowerCase().includes(value)
+    );
   }, [patients, searchTerm]);
 
-  function handleSearchChange(event) {
-    setSearchTerm(event.target.value);
+  function handleFormChange(e) {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleFormChange(event) {
-    const { name, value } = event.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  async function handleAddPatient(e) {
+    e.preventDefault();
+
+    const newPatient = await apiFetch("/api/patients", {
+      method: "POST",
+      body: JSON.stringify(formData),
+    });
+
+    setPatients((prev) => [newPatient, ...prev]);
+    setFormData({ firstName: "", lastName: "", email: "", phone: "" });
   }
 
-  async function handleAddPatient(event) {
-    event.preventDefault();
+  function handleEditPatient(id) {
+    const p = patients.find((x) => x._id === id);
+    if (!p) return;
 
-    if (
-      !formData.firstName.trim() ||
-      !formData.lastName.trim() ||
-      !formData.email.trim() ||
-      !formData.phone.trim()
-    ) {
-      alert("Please fill in all patient fields.");
-      return;
-    }
+    setEditingPatientId(id);
+    setEditFormData(p);
+    setIsEditModalOpen(true);
+  }
 
-    try {
-      const newPatient = await apiFetch("/api/patients", {
-        method: "POST",
-        body: JSON.stringify({
-          firstName: formData.firstName.trim(),
-          lastName: formData.lastName.trim(),
-          email: formData.email.trim(),
-          phone: formData.phone.trim(),
-        }),
-      });
+  async function handleEditSubmit(e) {
+    e.preventDefault();
 
-      setPatients((prev) => [newPatient, ...prev]);
+    const updated = await apiFetch(`/api/patients/${editingPatientId}`, {
+      method: "PUT",
+      body: JSON.stringify(editFormData),
+    });
 
-      setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-      });
-    } catch (err) {
-      console.error("Add patient error:", err);
-      alert(err.message || "Unable to add patient.");
-    }
+    setPatients((prev) =>
+      prev.map((p) => (p._id === editingPatientId ? updated : p))
+    );
+
+    setIsEditModalOpen(false);
   }
 
   async function handleDeletePatient(id) {
-    const confirmed = window.confirm("Delete this patient?");
-    if (!confirmed) return;
-
-    try {
-      await apiFetch(`/api/patients/${id}`, {
-        method: "DELETE",
-      });
-
-      setPatients((prev) => prev.filter((patient) => patient._id !== id));
-    } catch (err) {
-      console.error("Delete patient error:", err);
-      alert(err.message || "Unable to delete patient.");
-    }
-  }
-
-  async function handleEditPatient(id) {
-    const patientToEdit = patients.find((patient) => patient._id === id);
-    if (!patientToEdit) return;
-
-    const currentFullName =
-      `${patientToEdit.firstName || ""} ${patientToEdit.lastName || ""}`.trim();
-
-    const updatedName = prompt("Edit patient full name:", currentFullName);
-    if (!updatedName || !updatedName.trim()) return;
-
-    const nameParts = updatedName.trim().split(" ");
-    const firstName = nameParts[0] || patientToEdit.firstName;
-    const lastName = nameParts.slice(1).join(" ") || patientToEdit.lastName;
-
-    try {
-      const updatedPatient = await apiFetch(`/api/patients/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email: patientToEdit.email,
-          phone: patientToEdit.phone,
-        }),
-      });
-
-      setPatients((prev) =>
-        prev.map((patient) => (patient._id === id ? updatedPatient : patient))
-      );
-    } catch (err) {
-      console.error("Edit patient error:", err);
-      alert(err.message || "Unable to update patient.");
-    }
+    await apiFetch(`/api/patients/${id}`, { method: "DELETE" });
+    setPatients((prev) => prev.filter((p) => p._id !== id));
   }
 
   const columns = ["Name", "Email", "Phone", "Actions"];
 
-  const tableRows = filteredPatients.map((patient) => ({
-    Name: `${patient.firstName || ""} ${patient.lastName || ""}`.trim(),
-    Email: patient.email || "N/A",
-    Phone: patient.phone || "N/A",
+  const rows = filteredPatients.map((p) => ({
+    Name: `${p.firstName} ${p.lastName}`,
+    Email: p.email,
+    Phone: p.phone,
     Actions: (
       <div className="table-actions">
-        <Link to={`/patients/${patient._id}`} className="table-btn view-btn">
-          View Details
+        <Link to={`/patients/${p._id}`} className="table-btn view-btn">
+          View
         </Link>
-
-        <button
-          type="button"
-          className="table-btn edit-btn"
-          onClick={() => handleEditPatient(patient._id)}
-        >
+        <button onClick={() => handleEditPatient(p._id)} className="table-btn edit-btn">
           Edit
         </button>
-
-        <button
-          type="button"
-          className="table-btn delete-btn"
-          onClick={() => handleDeletePatient(patient._id)}
-        >
+        <button onClick={() => handleDeletePatient(p._id)} className="table-btn delete-btn">
           Delete
         </button>
       </div>
@@ -188,81 +117,40 @@ export default function Patients() {
   }));
 
   return (
-    <AppShell>
-      <PageHeader title="Patients" />
-
-      <div className="patients-page">
-        <FormCard>
-          <div className="patients-toolbar">
-            <SearchBar
-              placeholder="Search patients by name, email, or phone..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-          </div>
-        </FormCard>
-
-        <FormCard>
-          <h2 className="section-title">Add New Patient</h2>
-
-          <form className="patient-form" onSubmit={handleAddPatient}>
-            <input
-              type="text"
-              name="firstName"
-              placeholder="First Name"
-              value={formData.firstName}
-              onChange={handleFormChange}
-            />
-
-            <input
-              type="text"
-              name="lastName"
-              placeholder="Last Name"
-              value={formData.lastName}
-              onChange={handleFormChange}
-            />
-
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={formData.email}
-              onChange={handleFormChange}
-            />
-
-            <input
-              type="text"
-              name="phone"
-              placeholder="Phone Number"
-              value={formData.phone}
-              onChange={handleFormChange}
-            />
-
-            <button type="submit" className="primary-btn">
-              Add Patient
-            </button>
-          </form>
-        </FormCard>
-
-        <FormCard>
-          <div className="patients-table-header">
-            <h2 className="section-title">Patient Records</h2>
-            <p className="section-subtitle">
-              Total Results: {filteredPatients.length}
-            </p>
-          </div>
-
-          {loading ? (
-            <p className="info-text">Loading patients...</p>
-          ) : error ? (
-            <p className="error-text">{error}</p>
-          ) : filteredPatients.length > 0 ? (
-            <DataTable columns={columns} data={tableRows} />
-          ) : (
-            <p className="info-text">No patients found.</p>
-          )}
-        </FormCard>
+    <div className="page-section">
+      <div className="page-header-block">
+        <h1 className="page-title">Patients</h1>
       </div>
-    </AppShell>
+
+      <FormCard>
+        <SearchBar value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+      </FormCard>
+
+      <FormCard>
+        <form onSubmit={handleAddPatient} className="patient-form">
+          <input name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleFormChange} />
+          <input name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleFormChange} />
+          <input name="email" placeholder="Email" value={formData.email} onChange={handleFormChange} />
+          <input name="phone" placeholder="Phone" value={formData.phone} onChange={handleFormChange} />
+          <button className="primary-btn">Add</button>
+        </form>
+      </FormCard>
+
+      <FormCard>
+        {loading ? <p>Loading...</p> : <DataTable columns={columns} data={rows} />}
+      </FormCard>
+
+      <EditModal
+        title="Edit Patient"
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSubmit={handleEditSubmit}
+      >
+        <input name="firstName" value={editFormData.firstName} onChange={(e)=>setEditFormData({...editFormData, firstName:e.target.value})} />
+        <input name="lastName" value={editFormData.lastName} onChange={(e)=>setEditFormData({...editFormData, lastName:e.target.value})} />
+        <input name="email" value={editFormData.email} onChange={(e)=>setEditFormData({...editFormData, email:e.target.value})} />
+        <input name="phone" value={editFormData.phone} onChange={(e)=>setEditFormData({...editFormData, phone:e.target.value})} />
+      </EditModal>
+    </div>
   );
 }

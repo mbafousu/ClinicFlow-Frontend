@@ -53,7 +53,12 @@ export default function Dashboard() {
 
   return (
     <div className="page-section">
-      <h1 className="page-title">Dashboard</h1>
+      <div className="page-header-block">
+        <h1 className="page-title">Dashboard</h1>
+        <p className="page-subtitle">
+          Overview of patients, visits, and activity in ClinicFlow
+        </p>
+      </div>
 
       <div className="stats-grid">
         <StatCard
