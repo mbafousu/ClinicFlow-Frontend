@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../api/client";
-import AppShell from "../ui/AppShell";
-import PageHeader from "../ui/PageHeader";
 import StatCard from "../ui/StatCard";
 
 export default function Dashboard() {
@@ -54,8 +52,8 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <AppShell>
-      <PageHeader title="Dashboard" />
+    <div className="page-section">
+      <h1 className="page-title">Dashboard</h1>
 
       <div className="stats-grid">
         <StatCard
@@ -78,6 +76,6 @@ export default function Dashboard() {
           value={loading ? "..." : stats.drugSearches}
         />
       </div>
-    </AppShell>
+    </div>
   );
 }

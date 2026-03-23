@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import Sidebar from "./ui/Sidebar";
+import Topbar from "./ui/Topbar";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/Navbar";
@@ -16,72 +18,41 @@ export default function App() {
   const location = useLocation();
   const isLoggedIn = !!localStorage.getItem("token");
 
-  return (
-    <>
-      {isLoggedIn && location.pathname !== "/login" && <Navbar />}
-
-      <Routes>
-        <Route
-          path="/login"
-          element={isLoggedIn ? <Navigate to="/" replace /> : <Login />}
-        />
-
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/patients"
-          element={
-            <ProtectedRoute>
-              <Patients />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-  path="/appointments"
-  element={
-    <ProtectedRoute>
-      <Appointments />
-    </ProtectedRoute>
+  // If NOT logged in → only show login page
+  if (!isLoggedIn) {
+    return (
+      <>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+        <ToastContainer />
+      </>
+    );
   }
-/>
 
-        <Route
-          path="/patients/:id"
-          element={
-            <ProtectedRoute>
-              <PatientDetails />
-            </ProtectedRoute>
-          }
-        />
+  // Logged in layout 
+  return (
+    <div className="app-layout">
+      <Sidebar />
 
-        <Route
-          path="/visits"
-          element={
-            <ProtectedRoute>
-              <Visits />
-            </ProtectedRoute>
-          }
-        />
+      <div className="app-main">
+        <Topbar />
 
-        <Route
-          path="/druglookup"
-          element={
-            <ProtectedRoute>
-              <DrugLookup />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
-      </Routes>
+        <main className="page-content">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/patients" element={<Patients />} />
+            <Route path="/appointments" element={<Appointments />} />
+            <Route path="/patients/:id" element={<PatientDetails />} />
+            <Route path="/visits" element={<Visits />} />
+            <Route path="/drug-lookup" element={<DrugLookup />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+      </div>
 
       <ToastContainer />
-    </>
+    </div>
   );
 }
