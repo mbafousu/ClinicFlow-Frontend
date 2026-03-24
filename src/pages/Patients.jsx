@@ -103,7 +103,7 @@ export default function Patients() {
     Phone: p.phone,
     Actions: (
       <div className="table-actions">
-        <Link to={`/patients/${p._id}`} className="table-btn view-btn">
+        <Link to={`/patients/${patient._id}`} className="table-btn view-btn">
           View
         </Link>
         <button onClick={() => handleEditPatient(p._id)} className="table-btn edit-btn">
