@@ -14,15 +14,17 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
+  function handleChange(event) {
+    const { name, value } = event.target;
+
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
-  };
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  async function handleSubmit(event) {
+    event.preventDefault();
 
     if (!formData.email.trim() || !formData.password.trim()) {
       setError("Please enter your email and password.");
@@ -36,7 +38,7 @@ export default function Login() {
       const data = await apiFetch("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({
-          email: formData.email,
+          email: formData.email.trim(),
           password: formData.password,
         }),
       });
@@ -51,7 +53,7 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <div className="login-page">
@@ -67,22 +69,26 @@ export default function Login() {
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
-          <label>Email</label>
+          <label htmlFor="email">Email</label>
           <input
+            id="email"
             type="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
             placeholder="Enter your email"
+            autoComplete="email"
           />
 
-          <label>Password</label>
+          <label htmlFor="password">Password</label>
           <input
+            id="password"
             type="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
             placeholder="Enter your password"
+            autoComplete="current-password"
           />
 
           {error && <p className="login-error">{error}</p>}

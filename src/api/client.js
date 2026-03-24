@@ -12,16 +12,27 @@ export async function apiFetch(path, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+    });
 
-  const data = await response.json();
+    // Safe JSON parsing 
+    let data;
+    const text = await response.text();
+    data = text ? JSON.parse(text) : {};
 
-  if (!response.ok) {
-    throw new Error(data.message || "Request failed.");
+    if (!response.ok) {
+      throw new Error(data.message || `Error ${response.status}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("API ERROR:", error.message);
+
+    throw new Error(
+      error.message || "Network error. Please check your connection."
+    );
   }
-
-  return data;
 }
