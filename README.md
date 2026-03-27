@@ -1,67 +1,48 @@
 #  CliniFlow Frontend
+
 ## Overview
-This repository contains the `React frontend` for the ClinicFlow healthcare management system.
-The frontend provides the user interface for managing patients, tracking visits, and searching medication information using the FDA Drug API.
-The application communicates with the `ClinicFlow Backend REST API.`
+The frontend of ClinicFlow is a React-based application that provides an intuitive interface for managing patients, visits, appointments, and drug information.
 
 ## Backend Repository:
 https://github.com/mbafousu/ClinicFlow-Backend.git
 
-
 ## Features
+- Patient Management (CRUD UI)
+- Visit Tracking (Create, Read, Update, Delete)
+- Appointment Management (new feature)
+- Drug Lookup (FDA API integration)
+- Authentication (JWT-based login)
+- Responsive UI with clean layout
 
-- User authentication
+## Pages
+- Dashboard
+- Patients
+- Patient Details
+- Visits
+- Appointments 
+- Drug Lookup
 
-- Patient management interface
-
-- Visit tracking system
-
-- Drug lookup using FDA Drug API
-
-- Responsive UI built with Material UI
+## API Integration
+The frontend communicates with the backend using a custom API helper:
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 ## Tech Stack
-- React
-
+- React(Vite)
 - React Router
-
-- Material UI (MUI)
-
-- Vite
-
+- Material UI (MUI)/ CSS
 - Fetch API
 
-## Dependencies
-
-### Install dependencies
-npm install
-
-### Main libraries used:
-- npm install @mui/material @emotion/react @emotion/styled
-- npm install @mui/icons-material 
-- npm install react-router-dom 
-- npm install tsparticles tsparticles-slim
-
 ## Installation
-### clone repositories: git clone https://github.com/YOUR_USERNAME/ClinicFlow-Frontend.git
-### cd clinicflow
-### run the development server: npm run dev
-
-## Future Improvements
-- Role-based authentication
-
-- Medication autocomplete search
-
-- Patient analytics dashboard
-
-- Cloud deployment 
+- clone repositories: git clone https://github.com/YOUR_USERNAME/ClinicFlow-Frontend.git
+- cd clinicflow
+- run the development server: npm run dev
 
 ## Aplication Architecture
-React Frontend 
-      ↓
-Express Backend API 
-      ↓ 
-MongoDB Database 
-      ↓ 
-FDA Drug API
+- React Frontend 
+      - ↓
+- Express Backend API 
+      - ↓ 
+- MongoDB Database 
+      - ↓ 
+- FDA Drug API
 
