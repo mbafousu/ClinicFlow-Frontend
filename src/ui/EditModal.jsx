@@ -25,7 +25,7 @@ export default function EditModal({
               Cancel
             </button>
             <button type="submit" className="primary-btn">
-              Save Changes
+             save
             </button>
           </div>
         </form>

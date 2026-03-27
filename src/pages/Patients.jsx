@@ -98,23 +98,24 @@ export default function Patients() {
   const columns = ["Name", "Email", "Phone", "Actions"];
 
   const rows = filteredPatients.map((p) => ({
-    Name: `${p.firstName} ${p.lastName}`,
-    Email: p.email,
-    Phone: p.phone,
-    Actions: (
-      <div className="table-actions">
-        <Link to={`/patients/${patient._id}`} className="table-btn view-btn">
-          View
-        </Link>
-        <button onClick={() => handleEditPatient(p._id)} className="table-btn edit-btn">
-          Edit
-        </button>
-        <button onClick={() => handleDeletePatient(p._id)} className="table-btn delete-btn">
-          Delete
-        </button>
-      </div>
-    ),
-  }));
+  Name: `${p.firstName} ${p.lastName}`,
+  Email: p.email,
+  Phone: p.phone,
+  Actions: (
+    <div className="table-actions">
+      <Link to={`/patients/${p._id}`} className="table-btn view-btn">
+        View
+      </Link>
+      <button onClick={() => handleEditPatient(p._id)} className="table-btn edit-btn">
+        Edit
+      </button>
+      <button onClick={() => handleDeletePatient(p._id)} className="table-btn delete-btn">
+        Delete
+      </button>
+    </div>
+  ),
+}));
+    
 
   return (
     <div className="page-section">
