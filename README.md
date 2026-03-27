@@ -5,7 +5,7 @@ The frontend provides the user interface for managing patients, tracking visits,
 The application communicates with the `ClinicFlow Backend REST API.`
 
 ## Backend Repository:
-https://github.com/mbafousu/CinicFlow-Backend.git
+https://github.com/mbafousu/ClinicFlow-Backend.git
 
 
 ## Features
