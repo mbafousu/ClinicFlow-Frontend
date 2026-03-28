@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Sidebar from "./ui/Sidebar";
-import Topbar from "./ui/TopBar";
+import TopBar from "./ui/TopBar";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"
 import ProtectedRoute from "./auth/ProtectedRoute";
@@ -37,7 +37,7 @@ export default function App() {
       <Sidebar />
 
       <div className="app-main">
-        <Topbar />
+        <TopBar />
 
         <main className="page-content">
           <Routes>
