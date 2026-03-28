@@ -2,8 +2,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Sidebar from "./ui/Sidebar";
 import Topbar from "./ui/Topbar";
 import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import Navbar from "./components/Navbar";
+import "react-toastify/dist/ReactToastify.css"
 import ProtectedRoute from "./auth/ProtectedRoute";
 
 import Login from "./pages/Login";
