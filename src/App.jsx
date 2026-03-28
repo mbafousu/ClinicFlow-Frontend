@@ -18,7 +18,7 @@ export default function App() {
   const location = useLocation();
   const isLoggedIn = !!localStorage.getItem("token");
 
-  // If NOT logged in → only show login page
+  //  only show login page
   if (!isLoggedIn) {
     return (
       <>
